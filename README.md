@@ -30,4 +30,10 @@ Row 3 right.
 [3, 4]
 [5, 6]
 </pre>
-
+However without the `-v` flag `python solver.py 2 1 4 3 5 6 2`
+would produce:
+<pre>
+Starting position.
+Column 2 down.
+Row 3 right.
+</pre>
