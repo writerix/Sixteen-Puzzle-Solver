@@ -17,45 +17,46 @@ class Node:
         self.state = state
         self.history = history
 
-    def flat_state(self, llon=None):
-        if llon is None:
-            llon = self.state
-        return tuple(itertools.chain.from_iterable(llon))
+    def flat_state(self, matrix=None):
+        if matrix is None:
+            matrix = self.state
+        return tuple(itertools.chain.from_iterable(matrix))
 
     def gen_next_nodes(self):
         for i in range(len(self.state)):
-            #column down
-            cd_llon = rotations.col_down(self.state, i)
-            if self.flat_state(cd_llon) not in visited:
-                visited.add(self.flat_state(cd_llon))
-                copy_history = self.history[:]
-                copy_history.append('Column {} down.'.format(i + 1))
-                search.append(Node(cd_llon, copy_history))
-            
-            #column up
-            cu_llon = rotations.col_up(self.state, i)
-            if self.flat_state(cu_llon) not in visited:
-                visited.add(self.flat_state(cu_llon))
-                copy_history = self.history[:]
-                copy_history.append('Column {} up.'.format(i + 1))
-                search.append(Node(cu_llon, copy_history))
-
             #row right
-            rr_llon = rotations.row_right(self.state, i)
-            if self.flat_state(rr_llon) not in visited:
-                visited.add(self.flat_state(rr_llon))
+            rr_matrix = rotations.row_right(self.state, i)
+            if self.flat_state(rr_matrix) not in visited:
+                visited.add(self.flat_state(rr_matrix))
                 copy_history = self.history[:]
                 copy_history.append('Row {} right.'.format(i + 1))
-                search.append(Node(rr_llon, copy_history))
+                search.append(Node(rr_matrix, copy_history))
 
             #row left
-            rl_llon = rotations.row_left(self.state, i)
-            if self.flat_state(rl_llon) not in visited:
-                visited.add(self.flat_state(rl_llon))
+            rl_matrix = rotations.row_left(self.state, i)
+            if self.flat_state(rl_matrix) not in visited:
+                visited.add(self.flat_state(rl_matrix))
                 copy_history = self.history[:]
                 copy_history.append('Row {} left.'.format(i + 1))
-                search.append(Node(rl_llon, copy_history))
+                search.append(Node(rl_matrix, copy_history))
                 
+        for i in range(len(self.state[0])):
+            #column down
+            cd_matrix = rotations.col_down(self.state, i)
+            if self.flat_state(cd_matrix) not in visited:
+                visited.add(self.flat_state(cd_matrix))
+                copy_history = self.history[:]
+                copy_history.append('Column {} down.'.format(i + 1))
+                search.append(Node(cd_matrix, copy_history))
+            
+            #column up
+            cu_matrix = rotations.col_up(self.state, i)
+            if self.flat_state(cu_matrix) not in visited:
+                visited.add(self.flat_state(cu_matrix))
+                copy_history = self.history[:]
+                copy_history.append('Column {} up.'.format(i + 1))
+                search.append(Node(cu_matrix, copy_history))
+  
     def is_solved(self):
         return self.flat_state(self.state) == solved
     
