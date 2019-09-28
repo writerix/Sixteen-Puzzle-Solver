@@ -1,5 +1,5 @@
 # Sixteen-Puzzle-Solver
-Naive n x m puzzle solver for Simon Tatham's Sixteen puzzle
+Naive n x m puzzle solver for Simon Tatham's Sixteen puzzle.
 
 ## Background
 The Sixteen puzzle challenges the user to sort a grid of numbers. Unlike the Fifteen puzzle there isn't an empty space. Instead the user must shift entire rows or columns. Every move shifts a number outside of the puzzle grid and it reappears on the other size of the corresponding row or column.
