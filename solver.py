@@ -11,7 +11,7 @@ search = deque([])
 
 class Node:
     """
-    Represents a node in the search for solution to nxn puzzle.
+    Represents a node in the search for solution to n x m puzzle.
     """
     def __init__(self, state, history):
         self.state = state
