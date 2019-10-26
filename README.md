@@ -2,7 +2,7 @@
 Naive puzzle solver for Simon Tatham's Sixteen puzzle for Python 3.6+.
 
 ## Background
-The Sixteen puzzle challenges the user to sort a grid of numbers. Unlike the Fifteen puzzle there isn't an empty space. Instead the user must shift entire rows or columns. Every move shifts a number outside of the puzzle grid and it reappears on the other size of the corresponding row or column.
+The Sixteen puzzle challenges the user to sort a grid of numbers. Unlike the Fifteen puzzle there isn't an empty space. Instead, the user must shift entire rows or columns. Every move shifts a number outside of the puzzle grid and it reappears on the other side of the corresponding row or column. A browser version of the game is available at:
 [https://www.chiark.greenend.org.uk/~sgtatham/puzzles/js/sixteen.html#3x3](https://www.chiark.greenend.org.uk/~sgtatham/puzzles/js/sixteen.html#3x3)
 
 ## Using the solver
