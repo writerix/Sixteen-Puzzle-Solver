@@ -1,69 +1,98 @@
-import itertools
-from collections import deque
-
 import sys
-
-import rotations
-
-visited = set()
-search = deque([])
+import math
+import grid_operations as go
+from collections import deque, namedtuple
 
 
-class Node:
-    """
-    Represents a node in the search for solution to n x m puzzle.
-    """
-    def __init__(self, state, history):
-        self.state = state
-        self.history = history
+def extract_solution(instructions, rows, cols):
+    instruction_size = math.ceil(math.log2((2 * (rows + cols)) + 1))
+    steps = []
+    r_pos = 0
+    single_step = go.extract_bits(instructions, r_pos, instruction_size)
+    while single_step != 0:
+        steps.append(single_step)
+        r_pos += instruction_size
+        single_step = go.extract_bits(instructions, r_pos, instruction_size)
+    return steps[::-1]
 
-    def flat_state(self, matrix=None):
-        if matrix is None:
-            matrix = self.state
-        return tuple(itertools.chain.from_iterable(matrix))
 
-    def gen_next_nodes(self):
-        for i in range(len(self.state)):
-            #row right
-            rr_matrix = rotations.row_right(self.state, i)
-            if self.flat_state(rr_matrix) not in visited:
-                visited.add(self.flat_state(rr_matrix))
-                copy_history = self.history[:]
-                copy_history.append('Row {} right.'.format(i + 1))
-                search.append(Node(rr_matrix, copy_history))
+def search(solved_state, start_state, rows, cols):
+    Node = namedtuple('Node', ('state', 'history'))
+    next_node = Node(start_state, 0)
+    puzzle_solved = False
+    visited = set()
+    visited.add(start_state)
+    search = deque([next_node])
 
-            #row left
-            rl_matrix = rotations.row_left(self.state, i)
-            if self.flat_state(rl_matrix) not in visited:
-                visited.add(self.flat_state(rl_matrix))
-                copy_history = self.history[:]
-                copy_history.append('Row {} left.'.format(i + 1))
-                search.append(Node(rl_matrix, copy_history))
-                
-        for i in range(len(self.state[0])):
-            #column down
-            cd_matrix = rotations.col_down(self.state, i)
-            if self.flat_state(cd_matrix) not in visited:
-                visited.add(self.flat_state(cd_matrix))
-                copy_history = self.history[:]
-                copy_history.append('Column {} down.'.format(i + 1))
-                search.append(Node(cd_matrix, copy_history))
-            
-            #column up
-            cu_matrix = rotations.col_up(self.state, i)
-            if self.flat_state(cu_matrix) not in visited:
-                visited.add(self.flat_state(cu_matrix))
-                copy_history = self.history[:]
-                copy_history.append('Column {} up.'.format(i + 1))
-                search.append(Node(cu_matrix, copy_history))
-  
-    def is_solved(self):
-        return self.flat_state(self.state) == solved
-    
-    def __repr__(self):
-        return repr((self.state, self.history))
+    instruction_size = math.ceil(math.log2((2 * (rows + cols)) + 1))
 
-        
+    while puzzle_solved is False:
+        next_node = search.popleft()
+        if next_node.state == solved_state:
+            puzzle_solved = True
+            break
+        # generate new nodes to search
+        for i in range(1, cols + 1):
+            up_state = go.col_up(next_node.state, rows, cols, i)
+            if up_state not in visited:
+                visited.add(up_state)
+                up_history = next_node.history << instruction_size
+                up_history = up_history | i
+                search.append(Node(up_state, up_history))
+
+            down_state = go.col_down(next_node.state, rows, cols, i)
+            if down_state not in visited:
+                visited.add(down_state)
+                down_history = next_node.history << instruction_size
+                down_history = down_history | (cols + cols + rows + 1 - i)
+                search.append(Node(down_state, down_history))
+
+        for i in range(1, rows + 1):
+            right_state = go.row_right(next_node.state, rows, cols, i)
+            if right_state not in visited:
+                visited.add(right_state)
+                right_history = next_node.history << instruction_size
+                right_history = right_history | (cols + i)
+                search.append(Node(right_state, right_history))
+
+            left_state = go.row_left(next_node.state, rows, cols, i)
+            if left_state not in visited:
+                visited.add(left_state)
+                left_history = next_node.history << instruction_size
+                left_history = left_history | (cols + cols + rows + rows + 1 - i)
+                search.append(Node(left_state, left_history))
+
+    return next_node.history
+
+
+def play_solution(steps, rows, cols, state=None):
+    if len(steps) == 0:
+        print('Puzzle is already solved.')
+    else:
+        print('Starting position.')
+    if state is not None:
+        print(*go.extract_store(state, rows, cols), sep='\n')
+    for step in steps:
+        if step <= cols:
+            print('Column {} up.'.format(step))
+            if state is not None:
+                state = go.col_up(state, rows, cols, step)
+        elif step - cols <= rows:
+            print('Row {} right.'.format(step - cols))
+            if state is not None:
+                state = go.row_right(state, rows, cols, step - cols)
+        elif step - cols - rows <= cols:
+            print('Column {} down'.format(cols + cols + rows + 1 - step))
+            if state is not None:
+                state = go.col_down(state, rows, cols, (cols + cols + rows + 1 - step))
+        else:
+            print('Row {} left.'.format(cols + cols + rows + rows + 1 - step))
+            if state is not None:
+                state = go.row_left(state, rows, cols, (cols + cols + rows + rows + 1 - step))
+        if state is not None:
+            print(*go.extract_store(state, rows, cols), sep='\n')
+
+
 def chunk(original, chunk_size):
     """
     Yields lists composed of the original's items.
@@ -71,48 +100,26 @@ def chunk(original, chunk_size):
     for i in range(0, len(original), chunk_size):
         yield original[i: i + chunk_size]
 
-def play_solution(matrix, moves=None):
-    if moves is None:
-        print(*matrix, sep='\n')
-    else:
-        for step in moves:
-            if step != 'Starting position.':
-                components = step.split()
-                if components[0] == 'Row' and components[2] == 'left.':
-                    matrix = rotations.row_left(matrix, int(components[1]) - 1)
-                elif components[0] == 'Row' and components[2] == 'right.':
-                    matrix = rotations.row_right(matrix, int(components[1]) - 1)
-                elif components[0] == 'Column' and components[2] == 'up.':
-                    matrix = rotations.col_up(matrix, int(components[1]) - 1)
-                else:
-                    matrix = rotations.col_down(matrix, int(components[1]) - 1)
-            print(step)
-            print(*matrix, sep='\n')
-                    
 
 if __name__ == '__main__':
-    row_size = int(sys.argv[1])#size of rows == number of columns
+    row_size = int(sys.argv[1])  # size of rows == number of columns
     verbose = False
-    if '-v' in sys.argv or '--verbose' in sys.argv[1:]:
+    if '-v' in sys.argv or '--verbose' in sys.argv:
         verbose = True
-        tiles = list(filter(lambda x: x not in ('-v', '--verbose'), sys.argv[2:]))
+        tile_input = list(filter(lambda x: x not in ('-v', '--verbose'), sys.argv[2:]))
     else:
-        tiles = sys.argv[2:]
-    solved = tuple(sorted(map(int, tiles)))
-    start = Node(list(chunk(list(map(int, tiles)), row_size)), ['Starting position.'])
-    
-    if start.is_solved():
-        if verbose:
-            play_solution(start.state)
-        print('Puzzle is already solved.')
+        tile_input = sys.argv[2:]
+    tile_input = list(map(int, tile_input))
+    tiles = list(chunk(tile_input, row_size))
+    start_state = go.compact_store(tiles)
+    solved_state = go.compact_store(list(chunk(sorted(tile_input), row_size)))
+    try:
+        solution = search(solved_state, start_state, len(tiles), row_size)
+    except IndexError:
+        sys.exit("No solution found.")
+    steps = extract_solution(solution, len(tiles), row_size)
+    if verbose:
+        play_solution(steps, len(tiles), row_size, start_state)
     else:
-        visited.add(start.flat_state())
-        start.gen_next_nodes()
-        next_node = search.popleft()
-        while next_node.is_solved() is False:
-            next_node.gen_next_nodes()
-            next_node = search.popleft()
-        if verbose:
-            play_solution(start.state, next_node.history)
-        else:
-            print(*next_node.history, sep='\n')
+        play_solution(steps, len(tiles), row_size)
+
