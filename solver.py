@@ -4,6 +4,9 @@ import grid_operations as go
 from collections import deque, namedtuple
 
 
+Node = namedtuple('Node', ('state', 'history'))
+
+
 def extract_solution(instructions, rows, cols):
     instruction_size = math.ceil(math.log2((2 * (rows + cols)) + 1))
     steps = []
@@ -17,19 +20,16 @@ def extract_solution(instructions, rows, cols):
 
 
 def search(solved_state, start_state, rows, cols):
-    Node = namedtuple('Node', ('state', 'history'))
     next_node = Node(start_state, 0)
-    puzzle_solved = False
     visited = set()
     visited.add(start_state)
     search = deque([next_node])
 
     instruction_size = math.ceil(math.log2((2 * (rows + cols)) + 1))
 
-    while puzzle_solved is False:
+    while True:
         next_node = search.popleft()
         if next_node.state == solved_state:
-            puzzle_solved = True
             break
         # generate new nodes to search
         for i in range(1, cols + 1):
